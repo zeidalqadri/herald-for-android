@@ -1,40 +1,46 @@
 name: Unit Tests
 
-# READ THIS BEFORE MODIFYING: https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
-# And this: https://nathandavison.com/blog/github-actions-and-the-threat-of-malicious-pull-requests
-
-# WARNING ONLY EVER USE A GITHUB_TOKEN THAT HAS **ONLY** READ_REPO ACCESS
-# (Because we invoke the local gradlew command for reproducibility)
-
-# read-only repo token
-# no access to secrets
 on:
+  push:
+    branches:
+      - meshkit/fixes
   pull_request:
     branches:
-      - develop # PRs from external developers or project team
-      - master  # PRs for triggering a release. Both old (master) and new (main) branch names
+      - develop
+      - master
       - main
 
 jobs:
   unit_tests:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Compile
+        run: ./gradlew :herald:compileDebugSources --console=plain --no-daemon
 
       - name: Unit tests
-        run: ./gradlew test --stacktrace --info
+        run: ./gradlew :herald:testDebugUnitTest --console=plain --no-daemon
 
-      - name: Unit tests results
-        uses: actions/upload-artifact@v1
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: unit-tests-results
           path: herald/build/reports/tests/testDebugUnitTest
 
-      - name: Linting
-        run: ./gradlew check --stacktrace --info
+      - name: Lint
+        run: ./gradlew :herald:check --console=plain --no-daemon
 
-      - name: Linting results
-        uses: actions/upload-artifact@v1
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: linting-results
           path: herald/build/reports/lint-results.html
