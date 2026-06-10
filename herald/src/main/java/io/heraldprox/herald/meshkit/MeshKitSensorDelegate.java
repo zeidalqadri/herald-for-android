@@ -30,6 +30,12 @@ public class MeshKitSensorDelegate extends DefaultSensorDelegate {
     @Nullable
     private MeshKitContactListener contactListener;
 
+    @Nullable
+    private MeshKitQueue queue;
+
+    @Nullable
+    private MeshKitQueue.MeshKitDeliveryListener deliveryListener;
+
     private final List<MeshKitContact> contacts = new ArrayList<>();
     private final Object lock = new Object();
 
@@ -46,6 +52,14 @@ public class MeshKitSensorDelegate extends DefaultSensorDelegate {
 
     public void setContactListener(@Nullable final MeshKitContactListener listener) {
         this.contactListener = listener;
+    }
+
+    public void setQueue(@Nullable final MeshKitQueue queue) {
+        this.queue = queue;
+    }
+
+    public void setDeliveryListener(@Nullable final MeshKitQueue.MeshKitDeliveryListener listener) {
+        this.deliveryListener = listener;
     }
 
     // MARK:- SensorDelegate
@@ -116,6 +130,15 @@ public class MeshKitSensorDelegate extends DefaultSensorDelegate {
         }
         if (contactListener != null) {
             contactListener.onContactDetected(contact);
+        }
+        // Check queue for pending envelopes destined for this peer
+        final MeshKitQueue q = this.queue;
+        final MeshKitQueue.MeshKitDeliveryListener dl = this.deliveryListener;
+        if (q != null && dl != null) {
+            final List<MeshKitEnvelope> pending = q.peekForPeer(contact.remoteNodeId);
+            if (!pending.isEmpty()) {
+                dl.onShouldDeliver(pending, contact.remoteNodeId);
+            }
         }
     }
 }
