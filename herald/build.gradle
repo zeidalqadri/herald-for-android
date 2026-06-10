@@ -30,12 +30,25 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     lint {
         disable 'ObsoleteLintCustomCheck'
     }
 
     testOptions {
         unitTests.returnDefaultValues = true
+    }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+        singleVariant('debug') {
+            withSourcesJar()
+        }
     }
 }
 
