@@ -6,6 +6,8 @@ package io.heraldprox.herald.sensor.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.Nullable;
@@ -65,7 +67,15 @@ public class ForegroundService extends Service {
         final NotificationService notificationService = NotificationService.shared(getApplication());
         //noinspection ConstantConditions
         if (notificationService != null) {
-            startForeground(notificationService.getForegroundServiceNotificationId(), notificationService.getForegroundServiceNotification());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    notificationService.getForegroundServiceNotificationId(),
+                    notificationService.getForegroundServiceNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE | ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
+                );
+            } else {
+                startForeground(notificationService.getForegroundServiceNotificationId(), notificationService.getForegroundServiceNotification());
+            }
         }
     }
 
